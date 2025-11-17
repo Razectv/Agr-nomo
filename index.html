@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Registros de Pulverização - Agrônomo</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    h2 {
+      text-align: center;
+      color: #00ffcc;
+    }
+    .painel {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      margin: 15px 0;
+    }
+    .card {
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 5px;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+    .card h3 {
+      margin: 0;
+      color: #00ffcc;
+      font-size: 16px;
+    }
+    .card p {
+      margin: 5px 0 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+      background-color: #2c2c2c;
+      color: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+      font-size: 14px;
+    }
+    th {
+      background-color: #00ffcc;
+      color: #000;
+    }
+    tr:hover {
+      background-color: #2c2c2c;
+    }
+    @media (max-width: 480px) {
+      th, td {
+        font-size: 12px;
+        padding: 8px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 Registros de Pulverização</h2>
+
+  <!-- Painel de estatísticas -->
+  <div class="painel">
+    <div class="card">
+      <h3>📅 Registros no mês</h3>
+      <p id="totalMes">0</p>
+    </div>
+    <div class="card">
+      <h3>👨‍🌾 Operador destaque</h3>
+      <p id="operadorTop">-</p>
+    </div>
+    <div class="card">
+      <h3>🌱 Tipo mais usado</h3>
+      <p id="tipoTop">-</p>
+    </div>
+  </div>
+
+  <!-- Busca por operador -->
+  <input type="text" id="buscaOperador" placeholder="🔍 Buscar por operador..." />
+
+  <!-- Tabela de registros -->
+  <table>
+    <thead>
+      <tr>
+        <th>👤 Operador</th>
+        <th>📅 Data</th>
+        <th>🌱 Talhão</th>
+        <th>🧪 Tipo</th>
+        <th>🏡 Fazenda</th>
+      </tr>
+    </thead>
+    <tbody id="tabela-registros">
+      <tr><td colspan="5">🔄 Carregando registros...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    // Configuração Firebase (mesma do portal de registro)
+    const firebaseConfig = {
+      apiKey: "AIzaSyD62fPpXYW4T-niex4aPR9Q-Crz_erWPDg",
+      authDomain: "usuarios-eaa3b.firebaseapp.com",
+      databaseURL: "https://usuarios-eaa3b-default-rtdb.firebaseio.com",
+      projectId: "usuarios-eaa3b",
+      storageBucket: "usuarios-eaa3b.appspot.com",
+      messagingSenderId: "1077971782430",
+      appId: "1:1077971782430:web:c0ddb52757d4ed020d170f"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const tabela = document.getElementById("tabela-registros");
+    const buscaInput = document.getElementById("buscaOperador");
+
+    function atualizarEstatisticas(registros) {
+      const agora = new Date();
+      const mesAtual = agora.getMonth() + 1;
+      const anoAtual = agora.getFullYear();
+
+      let totalMes = 0;
+      let contagemOperadores = {};
+      let contagemTipos = {};
+
+      registros.forEach(r => {
+        const data = new Date(r.data_aplicacao);
+        if (data.getMonth() + 1 === mesAtual && data.getFullYear() === anoAtual) {
+          totalMes++;
+        }
+        contagemOperadores[r.operador] = (contagemOperadores[r.operador] || 0) + 1;
+        contagemTipos[r.tipo] = (contagemTipos[r.tipo] || 0) + 1;
+      });
+
+      document.getElementById("totalMes").textContent = totalMes;
+
+      // Operador destaque
+      let operadorTop = "-";
+      let maxOp = 0;
+      for (let op in contagemOperadores) {
+        if (contagemOperadores[op] > maxOp) {
+          maxOp = contagemOperadores[op];
+          operadorTop = `${op} (${maxOp})`;
+        }
+      }
+      document.getElementById("operadorTop").textContent = operadorTop;
+
+      // Tipo mais usado
+      let tipoTop = "-";
+      let maxTipo = 0;
+      for (let t in contagemTipos) {
+        if (contagemTipos[t] > maxTipo) {
+          maxTipo = contagemTipos[t];
+          tipoTop = `${t} (${maxTipo})`;
+        }
+      }
+      document.getElementById("tipoTop").textContent = tipoTop;
+    }
+
+    function renderTabela(snapshot) {
+      tabela.innerHTML = "";
+      let registros = [];
+
+      snapshot.forEach(child => {
+        registros.push(child.val());
+      });
+
+      atualizarEstatisticas(registros);
+
+      const filtro = buscaInput.value.toLowerCase();
+      registros.forEach(r => {
+        if (filtro && !r.operador.toLowerCase().includes(filtro)) return;
+        tabela.innerHTML += `
+          <tr>
+            <td>${r.operador}</td>
+            <td>${r.data_aplicacao}</td>
+            <td>${r.talhao}</td>
+            <td>${r.tipo}</td>
+            <td>${r.fazenda}</td>
+          </tr>
+        `;
+      });
+
+      if (!tabela.innerHTML) {
+        tabela.innerHTML = "<tr><td colspan='5'>⚠️ Nenhum registro encontrado.</td></tr>";
+      }
+    }
+
+    // Carregar registros e atualizar em tempo real
+    db.ref("pulverizacoes").on("value", snapshot => {
+      renderTabela(snapshot);
+    });
+
+    // Filtro por operador
+    buscaInput.addEventListener("input", () => {
+      db.ref("pulverizacoes").once("value").then(renderTabela);
+    });
+
+    // Notificação em tempo real
+    db.ref("pulverizacoes").on("child_added", snapshot => {
+      const r = snapshot.val();
+      alert(`🔔 Novo registro: ${r.operador} aplicou em ${r.data_aplicacao} (${r.tipo})`);
+    });
+  </script>
+</body>
+</html>
