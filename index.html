@@ -84,6 +84,16 @@
     }
   </style>
 </head>
+<!-- Favicon padrão -->
+<link rel="icon" type="image/png" sizes="32x32" href="logo-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="logo-192.png">
+
+<!-- Para iPhone/iPad -->
+<link rel="apple-touch-icon" sizes="180x180" href="logo-180.png">
+
+<!-- Para Android (PWA) -->
+<link rel="manifest" href="manifest.json">
+
 <body>
   <h2>📋 Registros de Pulverização</h2>
 
@@ -220,12 +230,6 @@
     // Filtro por operador
     buscaInput.addEventListener("input", () => {
       db.ref("pulverizacoes").once("value").then(renderTabela);
-    });
-
-    // Notificação em tempo real
-    db.ref("pulverizacoes").on("child_added", snapshot => {
-      const r = snapshot.val();
-      alert(`🔔 Novo registro: ${r.operador} aplicou em ${r.data_aplicacao} (${r.tipo})`);
     });
   </script>
 </body>
